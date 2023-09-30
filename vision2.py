@@ -21,7 +21,7 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
 
 # Mention the installed location of Tesseract-OCR in your system
-pytesseract.pytesseract.tesseract_cmd = r"/usr/local/bin/tesseract/"
+pytesseract.pytesseract.tesseract_cmd = r"C:\\Program Files\\Tesseract-OCR\\tesseract.exe"
 
 def getImage(img):
 # Read image from which text needs to be extracted
@@ -76,9 +76,9 @@ def getData():
         print(imgData['text'])
         print('getting MRN')
         getMRNandFIN(img,imgData)
-        print('curmrn', curMRN,'curfin', curFIN)
+        # print('curmrn', curMRN,'curfin', curFIN)
 
-
+getData()
 
 @app.route('/patientData', methods=['GET'])
 def get_patient_data_async():
