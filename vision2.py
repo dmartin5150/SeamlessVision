@@ -2,7 +2,7 @@
 import cv2
 import pytesseract
 from pytesseract import Output
-from PIL import ImageGrab
+from PIL import ImageGrab, Image
 import time
 import os
 import pyautogui
@@ -23,10 +23,14 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 # Mention the installed location of Tesseract-OCR in your system
 pytesseract.pytesseract.tesseract_cmd = r"C:\\Program Files\\Tesseract-OCR\\tesseract.exe"
 
-def getImage(img):
+def convertImage(img):
 # Read image from which text needs to be extracted
+    pic_array = np.array(img)
+    converted = cv2.cvtColor(pic_array,cv2.COLOR_BGRA2GRAY)
+    convertedImage = Image.fromarray(converted)
+    convertedImage.show()
+    return converted
 
-    return cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
 
 def getImageData(img):
     return pytesseract.image_to_data(img,lang='eng',output_type=Output.DICT)
@@ -44,11 +48,12 @@ def getMRNandFIN(img,imgData):
             if ('MRN:' in curElement):
                 print('mrn index', i)
                 print('mrn', curElement)
-                curMRN = curElement
+                parsedElement = curElement.split(":")
+                curMRN = parsedElement[1]
             if ('Fin#:' in curElement):
                 print('found fin')
-                curFIN = curElement
-                print('fin', curElement)
+                parsedElement = curElement.split(":")
+                curFIN = parsedElement[1]
     return curMRN, curFIN
 
 
@@ -67,24 +72,29 @@ def getScreenshot():
     return img
 
 
-def getData():
-        print('getting screenshot')
-        img = getScreenshot()
-        print('getting data')
-        imgData = getImageData(img)
-        # img.show()
-        print(imgData['text'])
-        print('getting MRN')
-        getMRNandFIN(img,imgData)
+# def getData():
+#         print('getting screenshot')
+#         img = getScreenshot()
+#         # img.show()
+#         img = convertImage(img)
+#         # img.show()
+#         print('getting data')
+#         imgData = getImageData(img)
+#         # img.show()
+#         print(imgData['text'])
+#         print('getting MRN')
+#         getMRNandFIN(img,imgData)
         # print('curmrn', curMRN,'curfin', curFIN)
 
-getData()
+# getData()
 
 @app.route('/patientData', methods=['GET'])
 def get_patient_data_async():
     print('getting screenshot')
     img = getScreenshot()
+    # img.show()
     print('getting data')
+    # img = convertImage(img)
     imgData = getImageData(img)
     # img.show()
     print(imgData['text'])
