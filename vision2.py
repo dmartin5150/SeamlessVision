@@ -10,6 +10,7 @@ from flask import Flask, flash, request, redirect, render_template, send_from_di
 from flask_cors import CORS
 import threading
 import json
+import numpy as np
 
 app = Flask(__name__)
 CORS(app)
@@ -21,8 +22,6 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
 # Mention the installed location of Tesseract-OCR in your system
 pytesseract.pytesseract.tesseract_cmd = r"/usr/local/bin/tesseract/"
-curMRN = ''
-curFIN = ''
 
 def getImage(img):
 # Read image from which text needs to be extracted
@@ -34,15 +33,14 @@ def getImageData(img):
 
 
 
-def getMRNandFIN(imgData):
+
+def getMRNandFIN(img,imgData):
     curData = imgData['text']
-    global curMRN
-    global curFIN
+    curMRN = ''
+    curFIN = ''
     if (len(curData) > 0):
         for i in range(0, len(curData)):
             curElement = curData[i]
-            # if ('FIN' in curElement):
-            #     print('found fin', curElement)
             if ('MRN:' in curElement):
                 print('mrn index', i)
                 print('mrn', curElement)
@@ -51,6 +49,8 @@ def getMRNandFIN(imgData):
                 print('found fin')
                 curFIN = curElement
                 print('fin', curElement)
+    return curMRN, curFIN
+
 
         
 
@@ -68,8 +68,6 @@ def getScreenshot():
 
 
 def getData():
-    global curMRN, curFIN
-    while True:
         print('getting screenshot')
         img = getScreenshot()
         print('getting data')
@@ -77,13 +75,22 @@ def getData():
         # img.show()
         print(imgData['text'])
         print('getting MRN')
-        getMRNandFIN(imgData)
+        getMRNandFIN(img,imgData)
         print('curmrn', curMRN,'curfin', curFIN)
 
-threading.Thread(target=getData).start()
 
-@app.route('/patientData', methods=['POST'])
+
+@app.route('/patientData', methods=['GET'])
 def get_patient_data_async():
+    print('getting screenshot')
+    img = getScreenshot()
+    print('getting data')
+    imgData = getImageData(img)
+    # img.show()
+    print(imgData['text'])
+    print('getting MRN')
+    curMRN, curFIN = getMRNandFIN(img,imgData)
+    print('curmrn', curMRN,'curfin', curFIN)
     return json.dumps({'FIN':curFIN,'MRN':curMRN}), 20
 
 app.run(host='0.0.0.0', port=5001)
